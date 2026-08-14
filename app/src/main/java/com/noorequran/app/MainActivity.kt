@@ -46,7 +46,6 @@ class MainActivity : Activity(), SensorEventListener {
     private var prayerTimes =
         linkedMapOf<String, String>()
 
-    // Default location: Islamabad
     private var lat = 33.6844
     private var lon = 73.0479
 
@@ -213,7 +212,7 @@ class MainActivity : Activity(), SensorEventListener {
             "More"
         ).forEachIndexed { index, name ->
 
-            val button =
+            val navButton =
                 Button(this).apply {
 
                     text = name
@@ -238,7 +237,7 @@ class MainActivity : Activity(), SensorEventListener {
                 }
 
             nav.addView(
-                button,
+                navButton,
                 LinearLayout.LayoutParams(
                     0,
                     70,
@@ -1382,16 +1381,21 @@ class MainActivity : Activity(), SensorEventListener {
         val now =
             Calendar.getInstance()
 
+        // FIX:
+        // Map par forEachIndexed directly use nahi hota.
+        // entries.toList() banakar indexed iteration ki ja rahi hai.
         prayerTimes
             .filterKeys {
                 it != "Sunrise"
             }
+            .entries
+            .toList()
             .forEachIndexed { index, entry ->
 
-                val name =
+                val name: String =
                     entry.key
 
-                val time =
+                val time: String =
                     entry.value
 
                 val parts =
@@ -1400,19 +1404,19 @@ class MainActivity : Activity(), SensorEventListener {
                         5
                     ).split(":")
 
-                val hour12 =
+                val hour12: Int =
                     parts[0].toInt()
 
-                val minute =
+                val minute: Int =
                     parts[1].toInt()
 
-                val pm =
+                val pm: Boolean =
                     time.endsWith(
                         "PM",
                         ignoreCase = true
                     )
 
-                var hour24 =
+                var hour24: Int =
                     hour12 % 12
 
                 if (pm) {
@@ -1453,7 +1457,7 @@ class MainActivity : Activity(), SensorEventListener {
                         }
                     }
 
-                val adhanUri =
+                val adhanUri: String =
                     prefs.getString(
                         "adhan_${(index % 15) + 1}",
                         ""
@@ -1463,15 +1467,18 @@ class MainActivity : Activity(), SensorEventListener {
                     Intent(
                         this,
                         PrayerAlarmReceiver::class.java
-                    )
-                        .putExtra(
+                    ).apply {
+
+                        putExtra(
                             "prayer",
                             name
                         )
-                        .putExtra(
+
+                        putExtra(
                             "adhan_uri",
                             adhanUri
                         )
+                    }
 
                 val pendingIntent =
                     PendingIntent.getBroadcast(
